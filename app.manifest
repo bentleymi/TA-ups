@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "2.0.0",
+  "info": {
+    "title": "UPS Health Add-on (NUT / apcupsd)",
+    "id": {
+      "group": null,
+      "name": "TA-ups",
+      "version": "1.0.0"
+    },
+    "author": [{"name":"Michael \"JKat54\" Bentley","email":"michael@bentleypc.com","company":"BentleyPC LLC"}],
+    "releaseDate": "11/14/2026",
+    "description": "Collects UPS health from Network UPS Tools (upsc) or apcupsd (apcaccess) when a UPS server is reachable: device model, online/off-battery status, battery charge, load and input voltage list. Emits JSON events to index=main (sourcetype ups:status) and ups.* metrics (device count, battery charge, on-battery flag) to index=metrics (sourcetype ups:metrics); hosts without a UPS server report 'absent'.",
+    "classification": {
+      "intendedAudience": "IT",
+      "categories": ["IT Operations"],
+      "developmentStatus": "Production/Latest"
+    },
+    "commonInformationModels": null,
+    "license": {
+      "name": "Source Available - Free personal use, commercial use requires paid license from BentleyPC LLC",
+      "text": "LICENSE",
+      "uri": null
+    },
+    "privacyPolicy": {
+      "name": null,
+      "text": null,
+      "uri": null
+    },
+    "releaseNotes": {
+      "name": null,
+      "text": null,
+      "uri": null
+    }
+  },
+  "dependencies": null,
+  "tasks": null,
+  "inputGroups": null,
+  "incompatibleApps": null,
+  "platformRequirements": null,
+  "supportedDeployments": [
+    "_standalone",
+    "_distributed"
+  ],
+  "targetWorkloads": ["_search_heads", "_indexers"]
+}

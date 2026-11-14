@@ -1,0 +1,54 @@
+TA-ups
+====
+
+Collects UPS health from Network UPS Tools (upsc) or apcupsd (apcaccess) when a UPS server is reachable: device model, online/off-battery status, battery charge, load and input voltage list. Emits JSON events to index=main (sourcetype ups:status) and ups.* metrics (device count, battery charge, on-battery flag) to index=metrics (sourcetype ups:metrics); hosts without a UPS server report 'absent'.
+
+Prerequisites
+-------------
+  * Optional: nut-client (upsc) with a NUT server, or apcupsd/apcaccess; auto-detected
+  * Splunk Enterprise or Universal Forwarder 9.x - 10.6 (forwarder recommended
+    on monitored hosts).
+  * A metrics-typed index (default name: metrics) on the indexer:
+
+      [metrics]
+      datatype = metric
+
+    Forwarders only need that index to exist on the indexer side.
+  * No network egress, no root requirement beyond the Splunk service account.
+    Fully standalone add-on with no dependencies.
+
+Install
+-------
+Install on each monitored host (Apps > Install app from file, splunk install
+app, or deployment server), restart Splunk, then verify:
+
+  index=main sourcetype="ups:status" | head
+
+Search quick reference
+----------------------
+  index=main sourcetype="ups:status" | head
+  | mcatalog values(metric_name) where index=metrics metric_name="ups.*" by host
+  | mstats avg("ups.*") where index=metrics span=60s by host
+
+Usage
+-----
+Events: index=main sourcetype=ups:status  (per-device JSON: model, status, charge, load, voltage)
+Metrics: ups.device_count, ups.<dev>_charge, ups.<dev>_on_battery
+Alarm status when any UPS is on battery (OLB).
+Dashboards: TA-Ups > Ups Overview / Ups Metrics
+
+Configure
+---------
+Override the interval or destination index in etc/apps/TA-ups/local/inputs.conf
+(never edit default/).
+
+Troubleshooting
+---------------
+  * upsc needs the NUT server running and reachable from the monitored host.
+  * No UPS present => status 'absent', ups.device_count=0 (not an alarm).
+
+License
+-------
+SOURCE-AVAILABLE (see LICENSE) - free personal, educational and evaluation
+use; commercial or production use requires a paid license from BentleyPC
+LLC (https://www.bentleypc.com).
