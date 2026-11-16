@@ -1,51 +1,77 @@
 <dashboard version="1.1" theme="light">
   <label>TA-ups Metrics</label>
-  <description>Index-time metrics over index=metrics (sourcetype=ups:metrics)</description>
+  <description> Index-time metrics over index=metrics (sourcetype ups:metrics); series prefixed 'ups.'.</description>
   <row>
     <panel>
-      <title>All ups.* series</title>
+      <title>All ups.* series (device count + per-device state)</title>
       <chart>
         <search>
           <query>| mstats avg("ups.*") as "v*" where index=metrics by metric_name span=5m
-| foreach v* [eval Value=coalesce(Value,&lt;&lt;FIELD&gt;&gt;)]
-| fields - v*
-| xyseries _time metric_name Value</query>
+| rename v* as "ups.*"</query>
           <done/>
         </search>
         <option name="charting.chart">line</option>
-        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.nullValueRendering">connect</option>
         <option name="charting.drilldown">none</option>
       </chart>
     </panel>
-      <panel>
-      <title>Battery charge (%)</title>
+  </row>
+  <row>
+    <panel>
+      <title>Battery charge (%) per device</title>
       <chart>
         <search>
-          <query>| mstats avg("ups.*") as "v*" where index=metrics by metric_name span=5m
-| search metric_name="*charge*"
-| foreach v* [eval Value=coalesce(Value,&lt;&lt;FIELD&gt;&gt;)]
-| fields - v*
-| xyseries _time metric_name Value</query>
+          <query>| mstats avg("ups.*_battery_charge") as "v*" where index=metrics by metric_name span=5m
+| rename v* as "ups.*_battery_charge"</query>
           <done/>
         </search>
         <option name="charting.chart">line</option>
-        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.nullValueRendering">connect</option>
         <option name="charting.drilldown">none</option>
       </chart>
     </panel>
-      <panel>
-      <title>On-battery / device counts</title>
+  </row>
+  <row>
+    <panel>
+      <title>Load (%) per device</title>
       <chart>
         <search>
-          <query>| mstats avg("ups.*") as "v*" where index=metrics by metric_name span=5m
-| search metric_name IN ("*on_battery*","*device_count*")
-| foreach v* [eval Value=coalesce(Value,&lt;&lt;FIELD&gt;&gt;)]
-| fields - v*
-| xyseries _time metric_name Value</query>
+          <query>| mstats avg("ups.*_load") as "v*" where index=metrics by metric_name span=5m
+| rename v* as "ups.*_load"</query>
           <done/>
         </search>
         <option name="charting.chart">line</option>
-        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.nullValueRendering">connect</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Voltages (per device)</title>
+      <chart>
+        <search>
+          <query>| mstats avg("ups.*voltage") as "v*" where index=metrics by metric_name span=5m
+| rename v* as "ups.*voltage"</query>
+          <done/>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueRendering">connect</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>On-battery flag (1=on battery)</title>
+      <chart>
+        <search>
+          <query>| mstats avg("ups.*_on_battery") as "v*" where index=metrics by metric_name span=5m
+| rename v* as "ups.*_on_battery"</query>
+          <done/>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueRendering">connect</option>
         <option name="charting.drilldown">none</option>
       </chart>
     </panel>

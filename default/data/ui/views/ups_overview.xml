@@ -3,43 +3,76 @@
   <description>Collects UPS health from Network UPS Tools (upsc) or apcupsd (apcaccess) when a UPS server is reachable: device model, online/off-battery status, battery charge, load and input</description>
   <row>
     <panel>
-      <title>Hosts Reporting (latest)</title>
-      <table>
-        <search>
-          <query>index=main sourcetype="ups:status"
-| stats latest(_time) as "Last seen", count as Reports by host
-| table host "Last seen" Reports</query>
-          <done/>
-        </search>
-        <option name="drilldown">none</option>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>Distinct ups.* Metrics (last hour)</title>
+      <title>UPS devices (per host, latest)</title>
       <single>
         <search>
-          <query>| mcatalog values(metric_name) as m where index=metrics metric_name="ups.*"
-| eval count=mvcount(m)</query>
+          <query>| mstats avg("ups.device_count") as value where index=metrics span=5m
+| fields - _time | tail 1</query>
           <done/>
         </search>
-        <option name="underLabel">ups.* metrics streaming</option>
+      </single>
+    </panel>
+    <panel>
+      <title>UPS on battery (fleet, latest)</title>
+      <single>
+        <search>
+          <query>index=main sourcetype="ups:status"
+| eventstats latest(_time) as lt by host
+| dedup host lt
+| rex field=_raw max_match=0 "\"on_battery\":\s*(?&lt;b&gt;[01])"
+| mvexpand b
+| where b="1"
+| stats count(b) as value</query>
+          <done/>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <title>Battery charge (% - avg of devices)</title>
+      <single>
+        <search>
+          <query>index=main sourcetype="ups:status"
+| eventstats latest(_time) as lt by host
+| dedup host lt
+| rex field=_raw max_match=0 "\"battery_charge\":\s*(?&lt;b&gt;[0-9.]+)"
+| mvexpand b
+| stats avg(b) as value</query>
+          <done/>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <title>Load (% - avg of devices)</title>
+      <single>
+        <search>
+          <query>index=main sourcetype="ups:status"
+| eventstats latest(_time) as lt by host
+| dedup host lt
+| rex field=_raw max_match=0 "\"load\":\s*(?&lt;l&gt;[0-9.]+)"
+| mvexpand l
+| stats avg(l) as value</query>
+          <done/>
+        </search>
       </single>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Issues (newest first)</title>
+      <title>UPS devices - latest per host</title>
       <table>
         <search>
-          <query>index=main sourcetype="ups:status" _raw="*alarm*"
-| sort - _time
-| table _time host _raw
-| rename _raw as Event
-| head 200</query>
+          <query>index=main sourcetype="ups:status"
+| dedup host
+| rex field=_raw max_match=0 "\"(?&lt;k&gt;[^\"]+)\":\s*(?&lt;o&gt;\{[^{}]*\})"
+| where match(o,"\"battery_charge\"")
+| eval z=mvzip(k,o,"^^")
+| mvexpand z
+| rex field=z "^(?&lt;k&gt;[^^]+)\^\^(?&lt;o&gt;.+)$"
+| spath input=o path=model | spath input=o path=input_voltage | spath input=o path=battery_voltage | spath input=o path=battery_charge | spath input=o path=load | spath input=o path=on_battery | spath input=o path=delay_shutdown
+| table host k model input_voltage battery_voltage battery_charge load on_battery delay_shutdown</query>
           <done/>
         </search>
+        <option name="count">100</option>
         <option name="drilldown">none</option>
       </table>
     </panel>
