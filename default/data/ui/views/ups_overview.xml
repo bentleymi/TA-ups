@@ -35,8 +35,9 @@
 | eventstats latest(_time) as lt by host
 | dedup host lt
 | rex field=_raw max_match=0 "\"battery_charge\":\s*(?&lt;b&gt;[0-9.]+)"
-| mvexpand b
-| stats avg(b) as value</query>
+| stats count(b) as n avg(b) as value
+| eval value=if(n>0,value,0)
+| fields value</query>
           <done/>
         </search>
       </single>
@@ -49,8 +50,9 @@
 | eventstats latest(_time) as lt by host
 | dedup host lt
 | rex field=_raw max_match=0 "\"load\":\s*(?&lt;l&gt;[0-9.]+)"
-| mvexpand l
-| stats avg(l) as value</query>
+| stats count(l) as n avg(l) as value
+| eval value=if(n>0,value,0)
+| fields value</query>
           <done/>
         </search>
       </single>
@@ -62,7 +64,8 @@
       <table>
         <search>
           <query>index=main sourcetype="ups:status"
-| dedup host
+| eventstats latest(_time) as lt by host
+| dedup host lt
 | rex field=_raw max_match=0 "\"(?&lt;k&gt;[^\"]+)\":\s*(?&lt;o&gt;\{[^{}]*\})"
 | where match(o,"\"battery_charge\"")
 | eval z=mvzip(k,o,"^^")

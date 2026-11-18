@@ -21,7 +21,7 @@ FIELD_MAP = (
 
 NUMERIC_FIELDS = ("battery_charge", "load", "battery_voltage", "input_voltage")
 
-METRIC_FIELDS = ("battery_charge", "load", "input_voltage")
+METRIC_FIELDS = ("battery_charge", "load", "input_voltage", "battery_voltage")
 
 
 def _find(paths):
