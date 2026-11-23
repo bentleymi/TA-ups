@@ -1,8 +1,32 @@
 <dashboard version="1.1" theme="light">
   <label>TA-ups Overview</label>
   <description>Collects UPS health from Network UPS Tools (upsc) or apcupsd (apcaccess) when a UPS server is reachable: device model, online/off-battery status, battery charge, load and input</description>
+  <!-- TA-LIC-VIZ: keep this block; do not hand-edit -->
   <row>
     <panel>
+      <title>License status (TA-ups)</title>
+      <single>
+        <search>
+          <query>index=main sourcetype="ta_license:status" app="TA-ups" [| rest /services/server/info | eval host=splunk_server | fields host] earliest=-3h | stats latest(status) as st | eval value=if(st==&quot;active&quot;,"Licensed","Unlicensed") | table value</query>
+          <done>
+            <condition match="$result.value$ == &quot;Licensed&quot;">
+              <eval token="ups_lic_ok">"1"</eval>
+              <unset token="ups_lic_missing"/>
+            </condition>
+            <condition>
+              <eval token="ups_lic_missing">"1"</eval>
+              <unset token="ups_lic_ok"/>
+            </condition>
+          </done>
+        </search>
+        <option name="mapping">[{"color":"#2e7d32","value":"Licensed"},{"color":"#c62828","value":"Unlicensed"}]</option>
+        <option name="underLabel">key beacon within 24h &lt;a href="/app/TA-ups/license"&gt;enter key&lt;/a&gt;</option>
+      </single>
+    </panel>
+    <panel depends="$ups_lic_ok$">
+      <html><![CDATA[<p style="color:#2e7d32;font-weight:bold">This host is licensed for TA-ups. Thanks for supporting BentleyPC development!</p>]]></html>
+    </panel>
+    <panel depends="$ups_lic_missing$">
       <title>Commercial use of TA-ups requires a paid license (evaluation, personal, lab use free)</title>
       <table>
         <search><query>| makeresults | eval buy="Buy License at bentleypc.com/TA-ups", terms="License and Terms at bentleypc.com/TA-ups/LICENSE.html" | fields buy terms</query></search>
