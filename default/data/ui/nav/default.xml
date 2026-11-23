@@ -3,5 +3,6 @@
     <view name="ups_overview" />
     <view name="ups_metrics" />
     <search label="TA-ups Events" search="search index=main sourcetype=ups:status" />
+    <view name="license" />
   </nav>
 </application>
